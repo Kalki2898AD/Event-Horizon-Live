@@ -12,6 +12,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <!-- Video.js for streaming -->
   <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
   <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
@@ -23,59 +25,83 @@
   <div class="background-collage"></div>
   <div class="overlay"></div>
   
-  <!-- Login Modal -->
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <h2>Welcome to Event Horizon Live</h2>
-      <p>Sign in to access premium content</p>
-      <button onclick="signInWithGoogle()" class="google-sign-in">
-        <i class="bi bi-google"></i> Sign in with Google
-      </button>
+  <!-- Subscription Modal -->
+  <div id="subscriptionModal" class="modal">
+    <div class="modal-content subscription-modal">
+      <button onclick="closeModal('subscriptionModal')" class="close-modal-btn">&times;</button>
+      <h2>Choose Your Plan</h2>
+      <div class="subscription-plans">
+        <div class="plan-card">
+          <h3>Monthly</h3>
+          <div class="plan-price">₹299/mo</div>
+          <ul class="plan-features">
+            <li>All Premium Content</li>
+            <li>HD Quality</li>
+            <li>Ad-free Experience</li>
+            <li>Cancel Anytime</li>
+          </ul>
+          <button onclick="handleSubscribe('monthly')" class="subscribe-btn">Subscribe Monthly</button>
+        </div>
+        <div class="plan-card best-value">
+          <span class="best-value-badge">Best Value</span>
+          <h3>Yearly</h3>
+          <div class="plan-price">₹2999/yr</div>
+          <ul class="plan-features">
+            <li>All Premium Content</li>
+            <li>4K Quality</li>
+            <li>Ad-free Experience</li>
+            <li>Priority Support</li>
+            <li>Save 15%</li>
+          </ul>
+          <button onclick="handleSubscribe('yearly')" class="subscribe-btn">Subscribe Yearly</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Subscription Modal -->
-  <div id="subscriptionModal" class="modal">
-    <div class="modal-content">
-      <h2>Premium Access</h2>
-      <p>Choose your subscription plan</p>
-      <div class="subscription-plans">
-        <div class="plan">
-          <h3>Monthly</h3>
-          <p class="price">₹299/month</p>
-          <ul>
-            <li>All Premium Content</li>
-            <li>HD Quality</li>
-            <li>No Ads</li>
-          </ul>
-          <button onclick="subscribe('monthly')" class="subscribe-btn">Subscribe</button>
-        </div>
-        <div class="plan featured">
-          <h3>Yearly</h3>
-          <p class="price">₹2999/year</p>
-          <p class="save">Save 16%</p>
-          <ul>
-            <li>All Premium Content</li>
-            <li>4K Quality</li>
-            <li>No Ads</li>
-            <li>Offline Downloads</li>
-          </ul>
-          <button onclick="subscribe('yearly')" class="subscribe-btn">Subscribe</button>
-        </div>
-      </div>
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content login-modal">
+      <button onclick="closeModal('loginModal')" class="close-modal-btn">&times;</button>
+      <h2>Sign In</h2>
+      <p>Sign in to continue watching</p>
+      <button onclick="signInWithGoogle()" class="google-sign-in">
+        <i class="bi bi-google"></i>
+        Sign in with Google
+      </button>
     </div>
   </div>
 
   <div class="container">
     <header>
       <div class="header-top">
-        <h1>Event Horizon Live</h1>
-        <div class="user-menu">
-          <div id="userProfile" class="user-profile" style="display: none;">
-            <img id="userAvatar" class="avatar" src="" alt="Profile">
-            <span id="userName"></span>
+        <div class="logo">
+          <h1>Event Horizon Live</h1>
+        </div>
+        <div class="auth-section">
+          <div class="profile-container" style="display: none;">
+            <img src="" alt="Profile" class="profile-img" onclick="toggleDropdown()">
+            <div class="profile-dropdown">
+              <div class="dropdown-menu">
+                <div class="dropdown-item" onclick="toggleSubscriptionDetails(event)">
+                  <span>Current Subscription</span>
+                  <div class="subscription-details" style="display: none;">
+                    <div class="plan-details">
+                      <h4>Current Plan: <span id="planType">Free</span></h4>
+                      <p>Status: <span id="subscriptionStatus">Inactive</span></p>
+                      <p>Expires: <span id="subscriptionExpiry">N/A</span></p>
+                      <button onclick="openModal('subscriptionModal')" class="upgrade-btn">
+                        <i class="bi bi-star-fill"></i>
+                        Upgrade to Premium
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="dropdown-item" onclick="signOut()">Logout</div>
+              </div>
+            </div>
           </div>
-          <button id="loginButton" onclick="showLoginModal()" class="login-btn">
+          <button id="loginButton" class="login-btn" onclick="openModal('loginModal')">
             <i class="bi bi-person-circle"></i> Login
           </button>
         </div>
@@ -112,38 +138,58 @@
       </div>
     </div>
 
-    <main class="tab-content">
-      <div id="sports" class="tab-pane active">
-        <section class="live-section">
-          <h2>Live Sports</h2>
-          <div id="sports-streams" class="streams-grid"></div>
-        </section>
-        <section class="news-section">
-          <h2>Sports News</h2>
-          <div id="sports-news" class="news-grid"></div>
-        </section>
-      </div>
+    <main>
+      <div class="tab-content">
+        <!-- Sports Tab -->
+        <div class="tab-pane active" id="sports">
+          <section class="live-section">
+            <h2>Live Sports</h2>
+            <div class="streams-grid" id="sports-streams">
+              <!-- Sports streams will be loaded here -->
+            </div>
+          </section>
+          
+          <section class="news-section">
+            <h2>Sports News</h2>
+            <div class="news-grid" id="sports-news">
+              <!-- Sports news will be loaded here -->
+            </div>
+          </section>
+        </div>
 
-      <div id="movies" class="tab-pane">
-        <section class="live-section">
-          <h2>Now Streaming</h2>
-          <div id="movies-streams" class="streams-grid"></div>
-        </section>
-        <section class="news-section">
-          <h2>Movie News</h2>
-          <div id="movies-news" class="news-grid"></div>
-        </section>
-      </div>
+        <!-- Movies Tab -->
+        <div class="tab-pane" id="movies">
+          <section class="live-section">
+            <h2>Live Movies</h2>
+            <div class="streams-grid" id="movies-streams">
+              <!-- Movie streams will be loaded here -->
+            </div>
+          </section>
+          
+          <section class="news-section">
+            <h2>Movie News</h2>
+            <div class="news-grid" id="movies-news">
+              <!-- Movie news will be loaded here -->
+            </div>
+          </section>
+        </div>
 
-      <div id="music" class="tab-pane">
-        <section class="live-section">
-          <h2>Live Concerts</h2>
-          <div id="music-streams" class="streams-grid"></div>
-        </section>
-        <section class="news-section">
-          <h2>Music News</h2>
-          <div id="music-news" class="news-grid"></div>
-        </section>
+        <!-- Music Tab -->
+        <div class="tab-pane" id="music">
+          <section class="live-section">
+            <h2>Live Music</h2>
+            <div class="streams-grid" id="music-streams">
+              <!-- Music streams will be loaded here -->
+            </div>
+          </section>
+          
+          <section class="news-section">
+            <h2>Music News</h2>
+            <div class="news-grid" id="music-news">
+              <!-- Music news will be loaded here -->
+            </div>
+          </section>
+        </div>
       </div>
     </main>
 
@@ -163,7 +209,9 @@
         </div>
         <div class="footer-section">
           <h4>Contact</h4>
-          <p>Email: support@eventhorizonlive.com</p>
+          <a href="#" onclick="openGmailCompose(); return false;" class="email-link">
+            <i class="bi bi-envelope-fill"></i> support@eventhorizonlive.space
+          </a>
           <div class="social-links">
             <a href="#"><i class="bi bi-facebook"></i></a>
             <a href="#"><i class="bi bi-twitter"></i></a>
